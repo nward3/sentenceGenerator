@@ -6,8 +6,8 @@ from collections import defaultdict
 import random
 
 # generates a dictionary with the probabilities based on the markov
-# model order to use as a foundation for sentence generation
-def load_text(sample_text, order):
+# model order and textfile as a foundation for sentence generation
+def load_textfile(sample_text, order):
 	text = defaultdict(list)
 
 	while order > 0:
@@ -24,48 +24,74 @@ def load_text(sample_text, order):
 
 	return text
 
+# generates a dictionary with the probabilities based on the markov
+# model order and user text as a foundation for sentence generation
+def load_usertext(user_text, order):
+	text = defaultdict(list)
+
+	while order > 0:
+		user_text = user_text.rstrip()
+		i = 0
+		while i < len(user_text):
+			if i < len(user_text) - order:
+				text[user_text[i:i + order]].append(user_text[i + order])
+			i += 1
+		order -= 1
+	
+	return text
+
 # determines the desired markov model order used to generate sentences
 def get_order():
 	try:
 		order = int(raw_input("Select a markov model order 1-10: "))
 		if order > 10 or order < 1:
 			print "Try again: the number must be an integer between 1-10"
+			print ""
 			order = get_order()
 	except ValueError:
 		print "Try again: the number must be an integer between 1-10"
+		print ""
 		order = get_order()
 	return order
 
 # determines the desired text file to use as input for markov model
-def get_textfile(order):
-	print "Select a number representing one of the following input files to base sentence generation on:"
-	print "Robin Hood:              1"
-	print "Tom Sawyer:              2"
-	print "Pride and Prejudice:     3"
-	print "Alice in Wonderland:     4"
-	print "A Tale of Two Cities:    5"
+def get_text(order):
+	print "Select a number from the list to base sentence generation on:"
+	print "Type your own text:      1"
+	print "Robin Hood:              2"
+	print "Tom Sawyer:              3"
+	print "Pride and Prejudice:     4"
+	print "Alice in Wonderland:     5"
+	print "A Tale of Two Cities:    6"
 	try:
 		inputfile = int(raw_input("Specify an input file to base sentence generation on: "))
-		if inputfile > 5 or inputfile < 1:
+		if inputfile > 6 or inputfile < 1:
 			print "Try again: specify a valid input file designated by the corresponding number"
 			print ""
-			print ""
-			inputfile = get_textfile(order)
+			inputfile = get_text(order)
 	except ValueError:
 		print "Try again: specify a valid input file designated by the corresponding number"
 		print ""
-		print ""
-		inputfile = get_textfile(order)
+		inputfile = get_text(order)
 	return inputfile
 
 if __name__ == "__main__":
 	# possible sources of text
-	texts = {1: "texts/rh.txt", 2: "texts/ts.txt", 3: "texts/pp.txt", 4: "texts/aw.txt", 5: "texts/ttc.txt"}
+	texts = {2: "texts/rh.txt", 3: "texts/ts.txt", 4: "texts/pp.txt", 5: "texts/aw.txt", 6: "texts/ttc.txt"}
 	order = get_order()
-	text_number = get_textfile(order)
-	text = load_text(texts[text_number], order)
+	text_number = get_text(order)
 
-	# determine the initial seed toi start sentence generation
+	# get text and create dictionary for character generation
+	if text_number == 1:
+		user_text = ""
+		print "Enter your text below: (A blank line ends input)"
+		for line in iter(raw_input, ''):
+			user_text += line
+		text = load_usertext(user_text, order)
+	else:
+		text = load_textfile(texts[text_number], order)
+
+	# determine the initial seed to start sentence generation
 	max = 0
 	index = ""
 	sentence = ""
